@@ -36,12 +36,13 @@ def generate(config: Config, arm_config: str):
             depth_replicate = math.ceil(depth / selected['depth'])
             selected_addr_width = (selected['depth']-1).bit_length()
 
-            print(
-                f'  reg [{addr_width-selected_addr_width-1}:0] read_addr_index_reg;', file=f)
-            print(f'  always @ (posedge R0_clk) begin', file=f)
-            print(
-                f'    read_addr_index_reg <= R0_addr >> {selected_addr_width};', file=f)
-            print(f'  end', file=f)
+            if addr_width > selected_addr_width:
+                print(
+                    f'  reg [{addr_width-selected_addr_width-1}:0] read_addr_index_reg;', file=f)
+                print(f'  always @ (posedge R0_clk) begin', file=f)
+                print(
+                    f'    read_addr_index_reg <= R0_addr >> {selected_addr_width};', file=f)
+                print(f'  end', file=f)
 
             for j in range(depth_replicate):
                 print(
@@ -50,11 +51,14 @@ def generate(config: Config, arm_config: str):
                     f'  wire write_addr_match_{j} = (W0_addr >> {selected_addr_width}) == {j};', file=f)
                 print(f'  wire [{width-1}:0] read_data_{j};', file=f)
 
-            print(f'  assign R0_data = \\', file=f)
-            for j in range(depth_replicate):
-                print(
-                    f'    {"  " * j}((read_addr_index_reg == {j}) ? read_data_{j} : \\', file=f)
-            print(f'    0{")" * depth_replicate};', file=f)
+            if addr_width > selected_addr_width:
+                print(f'  assign R0_data = \\', file=f)
+                for j in range(depth_replicate):
+                    print(
+                        f'    {"  " * j}((read_addr_index_reg == {j}) ? read_data_{j} : \\', file=f)
+                print(f'    0{")" * depth_replicate};', file=f)
+            else:
+                print(f'  assign R0_data = read_data_0;', file=f)
 
             for i in range(width_replicate):
                 width_start = i * width // width_replicate
