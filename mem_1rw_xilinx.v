@@ -1,8 +1,8 @@
 // Generate by chisel-memory-lower
 // Target: xilinx
-// Config(name='mem_1rw', depth='32', width='64', ports='rw', mask_gran=None)
+// Config(name='mem_1rw', depth='48', width='64', ports='rw', mask_gran=None)
 module mem_1rw (
-  input [4:0] RW0_addr,
+  input [5:0] RW0_addr,
   input RW0_en,
   input RW0_clk,
   input RW0_wmode,
@@ -11,9 +11,9 @@ module mem_1rw (
 );
 
   xpm_memory_spram #(
-    .ADDR_WIDTH_A(5),
+    .ADDR_WIDTH_A(6),
     .BYTE_WRITE_WIDTH_A(64),
-    .MEMORY_SIZE(2048),
+    .MEMORY_SIZE(3072),
     .READ_DATA_WIDTH_A(64),
     .READ_LATENCY_A(1),
     .WRITE_DATA_WIDTH_A(64)

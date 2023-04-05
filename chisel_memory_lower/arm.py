@@ -34,6 +34,7 @@ def generate(config: Config, arm_config: str):
 
             width_replicate = math.ceil(width / selected['width'])
             depth_replicate = math.ceil(depth / selected['depth'])
+            selected_addr_width = (selected['depth']-1).bit_length()
             for i in range(width_replicate):
                 width_start = i * width // width_replicate
                 width_end = (i+1) * width // width_replicate
@@ -42,13 +43,15 @@ def generate(config: Config, arm_config: str):
                     for port in selected["ports"]:
                         if port["type"] == "r":
                             print(f'    .{port["addr"]}(R0_addr),', file=f)
-                            print(f'    .{port["enable"]}(R0_en),', file=f)
+                            print(
+                                f'    .{port["enable"]}(R0_en && ((R0_addr >> {selected_addr_width}) == {j})),', file=f)
                             print(f'    .{port["clock"]}(R0_clk),', file=f)
                             print(
                                 f'    .{port["data"]}(R0_data[{width_end-1}:{width_start}]),', file=f)
                         elif port["type"] == "w":
                             print(f'    .{port["addr"]}(W0_addr),', file=f)
-                            print(f'    .{port["enable"]}(W0_en),', file=f)
+                            print(
+                                f'    .{port["enable"]}(W0_en && ((W0_addr >> {selected_addr_width}) == {j})),', file=f)
                             print(f'    .{port["clock"]}(W0_clk),', file=f)
                             print(
                                 f'    .{port["data"]}(W0_data[{width_end-1}:{width_start}]),', file=f)
