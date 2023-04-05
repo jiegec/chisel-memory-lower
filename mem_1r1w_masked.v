@@ -29,6 +29,6 @@ module mem_1r1w_masked (
     .clkb(R0_clk),
     .enb(R0_en),
     .doutb(R0_data),
-    .rstb(1'b0),
+    .rstb(1'b0)
   );
 endmodule

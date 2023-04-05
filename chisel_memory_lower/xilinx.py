@@ -103,7 +103,7 @@ def generate(config: Config):
             print(f'    .clkb(R0_clk),', file=f)
             print(f'    .enb(R0_en),', file=f)
             print(f'    .doutb(R0_data),', file=f)
-            print(f'    .rstb(1\'b0),', file=f)
+            print(f'    .rstb(1\'b0)', file=f)
             print(f'  );', file=f)
         print(f'endmodule', file=f)
         pass
