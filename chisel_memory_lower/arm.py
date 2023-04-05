@@ -35,6 +35,27 @@ def generate(config: Config, arm_config: str):
             width_replicate = math.ceil(width / selected['width'])
             depth_replicate = math.ceil(depth / selected['depth'])
             selected_addr_width = (selected['depth']-1).bit_length()
+
+            print(
+                f'  reg [{addr_width-selected_addr_width-1}:0] read_addr_index_reg;', file=f)
+            print(f'  always @ (posedge R0_clk) begin', file=f)
+            print(
+                f'    read_addr_index_reg <= R0_addr >> {selected_addr_width};', file=f)
+            print(f'  end', file=f)
+
+            for j in range(depth_replicate):
+                print(
+                    f'  wire read_addr_match_{j} = (R0_addr >> {selected_addr_width}) == {j};', file=f)
+                print(
+                    f'  wire write_addr_match_{j} = (W0_addr >> {selected_addr_width}) == {j};', file=f)
+                print(f'  wire [{width-1}:0] read_data_{j};', file=f)
+
+            print(f'  assign R0_data = \\', file=f)
+            for j in range(depth_replicate):
+                print(
+                    f'    {"  " * j}((read_addr_index_reg == {j}) ? read_data_{j} : \\', file=f)
+            print(f'    0{")" * depth_replicate};', file=f)
+
             for i in range(width_replicate):
                 width_start = i * width // width_replicate
                 width_end = (i+1) * width // width_replicate
@@ -44,14 +65,14 @@ def generate(config: Config, arm_config: str):
                         if port["type"] == "r":
                             print(f'    .{port["addr"]}(R0_addr),', file=f)
                             print(
-                                f'    .{port["enable"]}(R0_en && ((R0_addr >> {selected_addr_width}) == {j})),', file=f)
+                                f'    .{port["enable"]}(R0_en && read_addr_match_{j}),', file=f)
                             print(f'    .{port["clock"]}(R0_clk),', file=f)
                             print(
-                                f'    .{port["data"]}(R0_data[{width_end-1}:{width_start}]),', file=f)
+                                f'    .{port["data"]}(read_data_{j}[{width_end-1}:{width_start}]),', file=f)
                         elif port["type"] == "w":
                             print(f'    .{port["addr"]}(W0_addr),', file=f)
                             print(
-                                f'    .{port["enable"]}(W0_en && ((W0_addr >> {selected_addr_width}) == {j})),', file=f)
+                                f'    .{port["enable"]}(W0_en && write_addr_match_{j}),', file=f)
                             print(f'    .{port["clock"]}(W0_clk),', file=f)
                             print(
                                 f'    .{port["data"]}(W0_data[{width_end-1}:{width_start}]),', file=f)
