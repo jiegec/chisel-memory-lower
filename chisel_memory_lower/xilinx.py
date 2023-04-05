@@ -58,7 +58,7 @@ def generate(config: Config):
             print(f'    .dina(RW0_wdata),', file=f)
             print(f'    .ena(RW0_en),', file=f)
             print(f'    .rsta(1\'b0),', file=f)
-            print(f'    .wea(RW0_wmode),', file=f)
+            print(f'    .wea(RW0_wmode)', file=f)
             print(f'  );', file=f)
         elif ports == {"read", "write"}:
             # 1R1W
@@ -80,7 +80,7 @@ def generate(config: Config):
             print(f'    .clkb(R0_clk),', file=f)
             print(f'    .enb(R0_en),', file=f)
             print(f'    .doutb(R0_data),', file=f)
-            print(f'    .rstb(1\'b0),', file=f)
+            print(f'    .rstb(1\'b0)', file=f)
             print(f'  );', file=f)
         elif ports == {"read", "mwrite"}:
             # 1R1W Masked
