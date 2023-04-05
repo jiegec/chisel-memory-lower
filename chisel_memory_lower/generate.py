@@ -1,5 +1,6 @@
 import click
 from chisel_memory_lower.parser import parse
+import chisel_memory_lower.xilinx
 
 
 @click.command()
@@ -7,8 +8,12 @@ from chisel_memory_lower.parser import parse
 @click.argument('config')
 def generate(target: str, config: str):
     content = open(config, 'r').read()
-    print(parse(content))
-    print(target)
+    for mem in parse(content):
+        print(mem)
+        if target == "xilinx":
+            chisel_memory_lower.xilinx.generate(mem)
+        else:
+            assert False
 
 
 if __name__ == '__main__':
