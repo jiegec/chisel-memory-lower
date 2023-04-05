@@ -1,3 +1,4 @@
+import math
 from chisel_memory_lower.utils import generate_header
 from chisel_memory_lower.parser import Config
 from collections import namedtuple
@@ -26,6 +27,9 @@ def generate(config: Config, arm_config: str):
             # 1R1W Masked
             types = ['1r1w_masked']
         candidates = list(filter(lambda c: c['type'] in types, ip))
-        print(candidates)
+        if len(candidates) > 0:
+            selected = min(candidates, key=lambda candidate: math.ceil(width / candidate['width']) *
+                           math.ceil(depth / candidate['depth']) * candidate['cost'])
+            print(selected)
         print(f'endmodule', file=f)
         pass
