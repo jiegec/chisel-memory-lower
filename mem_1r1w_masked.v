@@ -1,4 +1,5 @@
 // Generate by chisel-memory-lower
+// Target: xilinx
 // Config(name='mem_1r1w_masked', depth='32', width='64', ports='mwrite,read', mask_gran='8')
 module mem_1r1w_masked (
   input [4:0] R0_addr,
@@ -11,6 +12,7 @@ module mem_1r1w_masked (
   input [63:0] W0_data,
   input [7:0] W0_mask
 );
+
   xpm_memory_sdpram #(
     .ADDR_WIDTH_A(5),
     .ADDR_WIDTH_B(5),
