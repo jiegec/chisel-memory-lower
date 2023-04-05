@@ -6,5 +6,5 @@ Usage:
 
 ```shell
 python3 -m chisel_memory_lower.generate xilinx example.conf
-python3 -m chisel_memory_lower.generate arm example.conf --arm-config arm.conf
+python3 -m chisel_memory_lower.generate arm example.conf --arm-config arm.yaml
 ```

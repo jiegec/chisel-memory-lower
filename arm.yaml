@@ -1,0 +1,36 @@
+# https://github.com/syifan/vortex/blob/d64bc880b23094489098bc51f86575e6c674f728/hw/syn/synopsys/models/memory/cln28hpc/rf2_32x128_wm1/rf2_32x128_wm1.v#LL120C8-L120C22
+- name: rf2_32x128_wm1
+  width: 128
+  depth: 32
+  ports: &1r1w_mask
+    - type: r
+      addr: AA
+      clock: CLKA
+      enable: CENA
+      data: QA
+    - type: w
+      addr: AB
+      clock: CLKB
+      enable: CENB
+      data: DB
+      mask: WENB
+# https://github.com/syifan/vortex/blob/d64bc880b23094489098bc51f86575e6c674f728/hw/syn/synopsys/models/memory/cln28hpm/rf2_32x19_wm0/rf2_32x19_wm0.v#L123
+- name: rf2_32x19_wm0
+  width: 19
+  depth: 32
+  ports: &1r1w
+    - type: r
+      addr: AA
+      clock: CLKA
+      enable: CENA
+      data: QA
+    - type: w
+      addr: AB
+      clock: CLKB
+      enable: CENB
+      data: DB
+# https://github.com/syifan/vortex/blob/d64bc880b23094489098bc51f86575e6c674f728/hw/syn/synopsys/models/memory/cln28hpm/rf2_256x19_wm0/rf2_256x19_wm0.v#L125
+- name: rf2_256x19_wm0
+  width: 19
+  depth: 256
+  ports: *1r1w
