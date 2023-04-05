@@ -1,14 +1,14 @@
-from chisel_memory_lower.generate import generate_header
+from chisel_memory_lower.utils import generate_header
 from chisel_memory_lower.parser import Config
 
 
 def generate(config: Config):
-    with open(f'{config.name}.v', 'w') as f:
+    with open(f'{config.name}_xilinx.v', 'w') as f:
         ports = set(config.ports.split(','))
         depth = int(config.depth)
         width = int(config.width)
         addr_width = (depth-1).bit_length()
-        header = generate_header(config)
+        header = generate_header(config, 'xilinx')
         print(header, file=f)
 
         if ports == {"rw"}:
