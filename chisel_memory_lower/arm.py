@@ -31,5 +31,27 @@ def generate(config: Config, arm_config: str):
             selected = min(candidates, key=lambda candidate: math.ceil(width / candidate['width']) *
                            math.ceil(depth / candidate['depth']) * candidate['cost'])
             print(selected)
+
+            width_replicate = math.ceil(width / selected['width'])
+            depth_replicate = math.ceil(depth / selected['depth'])
+            for i in range(width_replicate):
+                width_start = i * width // width_replicate
+                width_end = (i+1) * width // width_replicate
+                for j in range(depth_replicate):
+                    print(f'  {selected["name"]} inst_{i}_{j} (', file=f)
+                    for port in selected["ports"]:
+                        if port["type"] == "r":
+                            print(f'    .{port["addr"]}(R0_addr),', file=f)
+                            print(f'    .{port["enable"]}(R0_en),', file=f)
+                            print(f'    .{port["clock"]}(R0_clk),', file=f)
+                            print(
+                                f'    .{port["data"]}(R0_data[{width_end-1}:{width_start}]),', file=f)
+                        elif port["type"] == "w":
+                            print(f'    .{port["addr"]}(W0_addr),', file=f)
+                            print(f'    .{port["enable"]}(W0_en),', file=f)
+                            print(f'    .{port["clock"]}(W0_clk),', file=f)
+                            print(
+                                f'    .{port["data"]}(W0_data[{width_end-1}:{width_start}]),', file=f)
+                    print(f'  );', file=f)
         print(f'endmodule', file=f)
         pass

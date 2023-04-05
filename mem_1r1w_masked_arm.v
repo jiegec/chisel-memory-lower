@@ -13,4 +13,14 @@ module mem_1r1w_masked (
   input [7:0] W0_mask
 );
 
+  rf2_32x128_wm1 inst_0_0 (
+    .AA(R0_addr),
+    .CENA(R0_en),
+    .CLKA(R0_clk),
+    .QA(R0_data[63:0]),
+    .AB(W0_addr),
+    .CENB(W0_en),
+    .CLKB(W0_clk),
+    .DB(W0_data[63:0]),
+  );
 endmodule
