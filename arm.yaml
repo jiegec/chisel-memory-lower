@@ -9,12 +9,12 @@ ip:
     - type: r
       addr: AA
       clock: CLKA
-      enable: CENA
+      enable_n: CENA
       data: QA
     - type: w
       addr: AB
       clock: CLKB
-      enable: CENB
+      enable_n: CENB
       data: DB
       mask: WENB
 # https://github.com/vortexgpgpu/vortex/blob/master/hw/syn/synopsys/models/memory/cln28hpm/rf2_32x19_wm0/rf2_32x19_wm0.v
@@ -27,12 +27,12 @@ ip:
     - type: r
       addr: AA
       clock: CLKA
-      enable: CENA
+      enable_n: CENA
       data: QA
     - type: w
       addr: AB
       clock: CLKB
-      enable: CENB
+      enable_n: CENB
       data: DB
 # https://github.com/vortexgpgpu/vortex/blob/master/hw/syn/synopsys/models/memory/cln28hpm/rf2_256x19_wm0/rf2_256x19_wm0.v
 - name: rf2_256x19_wm0

@@ -69,14 +69,14 @@ def generate(config: Config, arm_config: str):
                         if port["type"] == "r":
                             print(f'    .{port["addr"]}(R0_addr),', file=f)
                             print(
-                                f'    .{port["enable"]}(R0_en && read_addr_match_{j}),', file=f)
+                                f'    .{port["enable_n"]}(~(R0_en && read_addr_match_{j})),', file=f)
                             print(f'    .{port["clock"]}(R0_clk),', file=f)
                             print(
                                 f'    .{port["data"]}(read_data_{j}[{width_end-1}:{width_start}]),', file=f)
                         elif port["type"] == "w":
                             print(f'    .{port["addr"]}(W0_addr),', file=f)
                             print(
-                                f'    .{port["enable"]}(W0_en && write_addr_match_{j}),', file=f)
+                                f'    .{port["enable_n"]}(~(W0_en && write_addr_match_{j})),', file=f)
                             print(f'    .{port["clock"]}(W0_clk),', file=f)
                             print(
                                 f'    .{port["data"]}(W0_data[{width_end-1}:{width_start}]),', file=f)

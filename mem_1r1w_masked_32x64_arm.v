@@ -19,11 +19,11 @@ module mem_1r1w_masked_32x64 (
   assign R0_data = read_data_0;
   rf2_32x128_wm1 inst_0_0 (
     .AA(R0_addr),
-    .CENA(R0_en && read_addr_match_0),
+    .CENA(~(R0_en && read_addr_match_0)),
     .CLKA(R0_clk),
     .QA(read_data_0[63:0]),
     .AB(W0_addr),
-    .CENB(W0_en && write_addr_match_0),
+    .CENB(~(W0_en && write_addr_match_0)),
     .CLKB(W0_clk),
     .DB(W0_data[63:0]),
   );
