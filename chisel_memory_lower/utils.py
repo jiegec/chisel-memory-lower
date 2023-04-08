@@ -68,11 +68,17 @@ def generate_tb(config: Config) -> str:
     for i in range(100):
         addr = random.randint(0, depth-1)
         data = random.randint(0, (1 << width) - 1)
-        if random.randint(0, 1) == 0:
+        rand = random.randint(0, 9)
+        if rand <= 5:
+            # read
             trans.append(("r", addr, ram[addr]))
-        else:
+        elif rand < 9:
+            # write
             ram[addr] = data
             trans.append(("w", addr, data))
+        else:
+            # bubble
+            trans.append(("b"))
 
     print(f'`timescale 1ns/1ps', file=f)
     print(f'module {config.name}_tb (', file=f)
@@ -97,32 +103,34 @@ def generate_tb(config: Config) -> str:
         print(f'    RW0_addr = 0;', file=f)
         print(f'    RW0_wdata = 0;', file=f)
         print(f'    #1;', file=f)
+        print(f'    #10;', file=f)
         for tx in trans:
-            print(f'    #10;', file=f)
             if tx[0] == "w":
                 print(f'    RW0_en = 1;', file=f)
                 print(f'    RW0_wmode = 1;', file=f)
                 print(f'    RW0_addr = {tx[1]};', file=f)
                 print(f'    RW0_wdata = \'h{tx[2]:x};', file=f)
                 print(f'    #10;', file=f)
-                print(f'    RW0_en = 0;', file=f)
-            else:
+            elif tx[0] == "r":
                 print(f'    RW0_en = 1;', file=f)
                 print(f'    RW0_wmode = 0;', file=f)
                 print(f'    RW0_addr = {tx[1]};', file=f)
                 print(f'    #10;', file=f)
-                print(f'    RW0_en = 0;', file=f)
-                print(f'    if (RW0_rdata != \'h{tx[2]:x} || RW0_rdata != RW0_rdata_behav) begin', file=f)
+                print(
+                    f'    if (RW0_rdata != \'h{tx[2]:x} || RW0_rdata != RW0_rdata_behav) begin', file=f)
                 print(f'      $display("ASSERTION FAILED");', file=f)
                 print(f'      $finish;', file=f)
                 print(f'    end', file=f)
+            elif tx[0] == "b":
+                print(f'    RW0_en = 0;', file=f)
+                print(f'    #10;', file=f)
 
         print(f'    $finish;', file=f)
         print(f'  end', file=f)
 
         print(f'  always #5 RW0_clk = ~RW0_clk;', file=f)
 
-        # behavior
+        # behavior, write first
         print(f'  always @ (posedge RW0_clk) begin', file=f)
         print(f'   if (RW0_en && !RW0_wmode) begin', file=f)
         print(f'     reg_RW0_addr <= RW0_addr;', file=f)
@@ -169,7 +177,7 @@ def generate_tb(config: Config) -> str:
                 print(f'    W0_data = \'h{tx[2]:x};', file=f)
                 print(f'    #10;', file=f)
                 print(f'    W0_en = 0;', file=f)
-            else:
+            elif tx[0] == "r":
                 print(f'    R0_en = 1;', file=f)
                 print(f'    R0_addr = {tx[1]};', file=f)
                 print(f'    #10;', file=f)
