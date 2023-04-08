@@ -76,5 +76,6 @@ def generate(config: Config, tb: bool):
             print(f'  );', file=f)
         print(f'endmodule', file=f)
 
+    with open(f'{config.name}_xilinx_tb.v', 'w') as f:
         tb = generate_tb(config)
         print(tb, file=f)

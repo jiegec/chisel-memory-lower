@@ -8,3 +8,4 @@ xelab.*
 *.log
 *.wdb
 *.vcd
+*_tb.v

@@ -35,7 +35,3 @@ module mem_1r1w_masked_48x64 (
     .rstb(1'b0)
   );
 endmodule
-module mem_1r1w_masked_48x64_tb (
-);
-endmodule
-

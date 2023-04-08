@@ -1,5 +1,6 @@
 
 from io import StringIO
+import os
 import random
 from chisel_memory_lower.parser import Config
 
@@ -60,13 +61,18 @@ def generate_tb(config: Config) -> str:
     vivado_version = '2020.2'
     with open(f'{config.name}_xilinx.prj', 'w') as file:
         print(f'verilog work {config.name}_xilinx.v', file=file)
-        print(f'sv work /opt/Xilinx/Vivado/{vivado_version}/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv', file=file)
+        print(f'verilog work {config.name}_xilinx_tb.v', file=file)
+        print(
+            f'sv work /opt/Xilinx/Vivado/{vivado_version}/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv', file=file)
 
     with open(f'{config.name}_xilinx.sh', 'w') as file:
         print(f'#!/bin/bash', file=file)
-        print(f'export PATH=/opt/Xilinx/Vivado/{vivado_version}/bin:$PATH', file=file)
-        print(f'xelab -debug all {config.name} -prj {config.name}_xilinx.prj', file=file)
-        print(f'xsim {config.name} --tclbatch sim.tcl', file=file)
+        print(
+            f'export PATH=/opt/Xilinx/Vivado/{vivado_version}/bin:$PATH', file=file)
+        print(
+            f'xelab -debug all {config.name}_tb -prj {config.name}_xilinx.prj', file=file)
+        print(f'xsim {config.name}_tb --tclbatch sim.tcl', file=file)
+    os.chmod(f'{config.name}_xilinx.sh', 0o755)
 
     # generate transactions
     random.seed(0)
@@ -84,6 +90,7 @@ def generate_tb(config: Config) -> str:
             ram[addr] = data
             trans.append(("w", addr, data))
 
+    print(f'`timescale 1ns/1ps', file=f)
     print(f'module {config.name}_tb (', file=f)
     print(f');', file=f)
     if ports == {"rw"}:
