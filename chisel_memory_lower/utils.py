@@ -77,7 +77,11 @@ def generate_tb(config: Config) -> str:
                 # read+write
                 # write first
                 ram[addr] = data
-                raddr = random.randint(0, depth-1)
+                if rand == 5:
+                    # test read-write collision
+                    raddr = addr
+                else:
+                    raddr = random.randint(0, depth-1)
                 trans.append(("rw", addr, data, raddr, ram[raddr]))
             else:
                 # write
@@ -124,7 +128,7 @@ def generate_tb(config: Config) -> str:
                 print(f'    RW0_addr = {tx[1]};', file=f)
                 print(f'    #10;', file=f)
                 print(
-                    f'    if (RW0_rdata != \'h{tx[2]:x} || RW0_rdata != RW0_rdata_behav) begin', file=f)
+                    f'    if (RW0_rdata !== \'h{tx[2]:x} || RW0_rdata !== RW0_rdata_behav) begin', file=f)
                 print(f'      $display("ASSERTION FAILED");', file=f)
                 print(f'      $finish;', file=f)
                 print(f'    end', file=f)
@@ -193,7 +197,7 @@ def generate_tb(config: Config) -> str:
                 print(f'    R0_addr = {tx[1]};', file=f)
                 print(f'    #10;', file=f)
                 print(
-                    f'    if (R0_data != \'h{tx[2]:x} || R0_data != R0_data_behav) begin', file=f)
+                    f'    if (R0_data !== \'h{tx[2]:x} || R0_data !== R0_data_behav) begin', file=f)
                 print(f'      $display("ASSERTION FAILED");', file=f)
                 print(f'      $finish;', file=f)
                 print(f'    end', file=f)
@@ -205,7 +209,7 @@ def generate_tb(config: Config) -> str:
                 print(f'    W0_data = \'h{tx[2]:x};', file=f)
                 print(f'    #10;', file=f)
                 print(
-                    f'    if (R0_data != \'h{tx[4]:x} || R0_data != R0_data_behav) begin', file=f)
+                    f'    if (R0_data !== \'h{tx[4]:x} || R0_data !== R0_data_behav) begin', file=f)
                 print(f'      $display("ASSERTION FAILED");', file=f)
                 print(f'      $finish;', file=f)
                 print(f'    end', file=f)
