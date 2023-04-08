@@ -85,6 +85,10 @@ def generate_tb(config: Config) -> str:
         print(f'  reg RW0_wmode;', file=f)
         print(f'  reg [{width-1}:0] RW0_wdata;', file=f)
         print(f'  wire [{width-1}:0] RW0_rdata;', file=f)
+        # behavior
+        print(f'  reg [{width-1}:0] ram [{depth-1}:0];', file=f)
+        print(f'  reg [{addr_width-1}:0] reg_RW0_addr;', file=f)
+        print(f'  wire [{width-1}:0] RW0_rdata_behav;', file=f)
 
         print(f'  initial begin', file=f)
         print(f'    RW0_clk = 1;', file=f)
@@ -108,7 +112,7 @@ def generate_tb(config: Config) -> str:
                 print(f'    RW0_addr = {tx[1]};', file=f)
                 print(f'    #10;', file=f)
                 print(f'    RW0_en = 0;', file=f)
-                print(f'    if (RW0_rdata != \'h{tx[2]:x}) begin', file=f)
+                print(f'    if (RW0_rdata != \'h{tx[2]:x} || RW0_rdata != RW0_rdata_behav) begin', file=f)
                 print(f'      $display("ASSERTION FAILED");', file=f)
                 print(f'      $finish;', file=f)
                 print(f'    end', file=f)
@@ -117,6 +121,17 @@ def generate_tb(config: Config) -> str:
         print(f'  end', file=f)
 
         print(f'  always #5 RW0_clk = ~RW0_clk;', file=f)
+
+        # behavior
+        print(f'  always @ (posedge RW0_clk) begin', file=f)
+        print(f'   if (RW0_en && !RW0_wmode) begin', file=f)
+        print(f'     reg_RW0_addr <= RW0_addr;', file=f)
+        print(f'   end', file=f)
+        print(f'   if (RW0_en && RW0_wmode) begin', file=f)
+        print(f'     ram[RW0_addr] <= RW0_wdata;', file=f)
+        print(f'   end', file=f)
+        print(f'  end', file=f)
+        print(f'  assign RW0_rdata_behav = ram[reg_RW0_addr];', file=f)
 
         print(f'  {config.name} inst (', file=f)
         print(f'    .RW0_addr(RW0_addr),', file=f)
