@@ -56,6 +56,7 @@ def generate_tb(config: Config) -> str:
     ports = set(config.ports.split(','))
     depth = int(config.depth)
     width = int(config.width)
+    mask_gran = config.mask_gran
     addr_width = (depth-1).bit_length()
 
     # generate transactions
@@ -64,7 +65,13 @@ def generate_tb(config: Config) -> str:
     ram = [0] * depth
     for i in range(depth):
         ram[i] = random.randint(0, (1 << width) - 1)
-        trans.append(("w", i, ram[i]))
+        if "mwrite" in ports:
+            mask_gran = int(mask_gran)
+            mask_bits = width // mask_gran
+            wmask = (1 << mask_bits) - 1
+            trans.append(("w", i, ram[i], wmask))
+        else:
+            trans.append(("w", i, ram[i]))
     for i in range(1000):
         addr = random.randint(0, depth-1)
         data = random.randint(0, (1 << width) - 1)
@@ -90,8 +97,20 @@ def generate_tb(config: Config) -> str:
                     trans.append(("rw", addr, data, raddr, ram[raddr]))
             else:
                 # write
-                ram[addr] = data
-                trans.append(("w", addr, data))
+                if "mwrite" in ports:
+                    # masked write
+                    mask_gran = int(mask_gran)
+                    mask_bits = width // mask_gran
+                    wmask = random.randint(0, (1 << mask_bits) - 1)
+                    bmask = 0
+                    for j in range(mask_bits):
+                        if wmask & (1 << j) != 0:
+                            bmask |= ((1 << mask_gran) - 1) << (mask_gran * j)
+                    ram[addr] = (ram[addr] & ~bmask) | (data & bmask)
+                    trans.append(("w", addr, data, wmask))
+                else:
+                    ram[addr] = data
+                    trans.append(("w", addr, data))
         else:
             # bubble
             trans.append(("b"))
@@ -136,6 +155,7 @@ def generate_tb(config: Config) -> str:
                 print(f'    RW0_en = 0;', file=f)
                 print(f'    #10;', file=f)
 
+        print(f'    $display("SIMULATION SUCCESS");', file=f)
         print(f'    $finish;', file=f)
         print(f'  end', file=f)
 
@@ -149,8 +169,8 @@ def generate_tb(config: Config) -> str:
         print(f'    .RW0_wdata(RW0_wdata),', file=f)
         print(f'    .RW0_rdata(RW0_rdata)', file=f)
         print(f'  );', file=f)
-    elif ports == {"read", "write"}:
-        # 1R1W
+    elif ports == {"read", "write"} or ports == {"read", "mwrite"}:
+        # 1R1W or 1R1W masked
         print(f'  reg [{addr_width-1}:0] R0_addr;', file=f)
         print(f'  reg R0_en;', file=f)
         print(f'  reg R0_clk;', file=f)
@@ -159,6 +179,8 @@ def generate_tb(config: Config) -> str:
         print(f'  reg W0_en;', file=f)
         print(f'  reg W0_clk;', file=f)
         print(f'  reg [{width-1}:0] W0_data;', file=f)
+        if "mwrite" in ports:
+            print(f'  reg [{width//int(mask_gran)-1}:0] W0_mask;', file=f)
 
         print(f'  initial begin', file=f)
         print(f'    R0_clk = 1;', file=f)
@@ -168,6 +190,9 @@ def generate_tb(config: Config) -> str:
         print(f'    W0_en = 0;', file=f)
         print(f'    W0_addr = 0;', file=f)
         print(f'    W0_data = 0;', file=f)
+        if "mwrite" in ports:
+            print(
+                f'    W0_mask = {{{width//int(mask_gran)}{{1\'b1}}}};', file=f)
         print(f'    #2;', file=f)
         for tx in trans:
             if tx[0] == "w":
@@ -175,6 +200,8 @@ def generate_tb(config: Config) -> str:
                 print(f'    W0_en = 1;', file=f)
                 print(f'    W0_addr = {tx[1]};', file=f)
                 print(f'    W0_data = \'h{tx[2]:x};', file=f)
+                if "mwrite" in ports:
+                    print(f'    W0_mask = \'h{tx[3]:x};', file=f)
                 print(f'    #10;', file=f)
             elif tx[0] == "r":
                 print(f'    R0_en = 1;', file=f)
@@ -209,6 +236,7 @@ def generate_tb(config: Config) -> str:
                 print(f'    W0_en = 0;', file=f)
                 print(f'    #10;', file=f)
 
+        print(f'    $display("SIMULATION SUCCESS");', file=f)
         print(f'    $finish;', file=f)
         print(f'  end', file=f)
 
@@ -223,6 +251,8 @@ def generate_tb(config: Config) -> str:
         print(f'    .W0_addr(W0_addr),', file=f)
         print(f'    .W0_en(W0_en),', file=f)
         print(f'    .W0_clk(W0_clk),', file=f)
+        if "mwrite" in ports:
+            print(f'    .W0_mask(W0_mask),', file=f)
         print(f'    .W0_data(W0_data)', file=f)
         print(f'  );', file=f)
     print(f'endmodule', file=f)
