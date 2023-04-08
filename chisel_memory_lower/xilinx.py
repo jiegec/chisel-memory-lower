@@ -1,3 +1,4 @@
+import os
 from chisel_memory_lower.utils import generate_header, generate_tb
 from chisel_memory_lower.parser import Config
 
@@ -75,6 +76,22 @@ def generate(config: Config, tb: bool):
             print(f'    .rstb(1\'b0)', file=f)
             print(f'  );', file=f)
         print(f'endmodule', file=f)
+
+    vivado_version = '2020.2'
+    with open(f'{config.name}_xilinx.prj', 'w') as file:
+        print(f'verilog work {config.name}_xilinx.v', file=file)
+        print(f'verilog work {config.name}_xilinx_tb.v', file=file)
+        print(
+            f'sv work /opt/Xilinx/Vivado/{vivado_version}/data/ip/xpm/xpm_memory/hdl/xpm_memory.sv', file=file)
+
+    with open(f'{config.name}_xilinx.sh', 'w') as file:
+        print(f'#!/bin/bash', file=file)
+        print(
+            f'export PATH=/opt/Xilinx/Vivado/{vivado_version}/bin:$PATH', file=file)
+        print(
+            f'xelab -debug all {config.name}_tb -prj {config.name}_xilinx.prj', file=file)
+        print(f'xsim {config.name}_tb --tclbatch sim.tcl', file=file)
+    os.chmod(f'{config.name}_xilinx.sh', 0o755)
 
     with open(f'{config.name}_xilinx_tb.v', 'w') as f:
         tb = generate_tb(config)
