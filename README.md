@@ -23,4 +23,4 @@ Chisel allows three read under write behaviors, `Undefined`, `ReadFirst` or `Wri
 - `SyncReadMem(ReadFirst)`: `old` in FIRRTL, `ReadFirst` in behavior model
 - `SyncReadMem(WriteFirst)`: `new` in FIRRTL, `WriteFirst` in behavior model
 
-However, XPM only supports `Undefined`(NO_CHANGE & WRITE_FIRST, generates `x`) and `ReadFirst`(READ_FIRST). ARM Memory IP only supports `Undefined`(generates `x`).
+However, XPM only supports `Undefined`(NO_CHANGE & WRITE_FIRST, generates `x`) and `ReadFirst`(READ_FIRST). ARM Memory IP only supports `Undefined`(generates `x`). Thus the behavior is not guaranteed when lowering.
