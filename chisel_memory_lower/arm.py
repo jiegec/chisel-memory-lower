@@ -30,7 +30,7 @@ def generate(config: Config, arm_config: str):
         if len(candidates) > 0:
             selected = min(candidates, key=lambda candidate: math.ceil(width / candidate['width']) *
                            math.ceil(depth / candidate['depth']) * candidate['cost'])
-            print(selected)
+            print(f"Using sram ip {selected['name']}")
 
             width_replicate = math.ceil(width / selected['width'])
             depth_replicate = math.ceil(depth / selected['depth'])
