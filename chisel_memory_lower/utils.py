@@ -132,12 +132,12 @@ def generate_tb(config: Config) -> str:
 
         # behavior, write first
         print(f'  always @ (posedge RW0_clk) begin', file=f)
-        print(f'   if (RW0_en && !RW0_wmode) begin', file=f)
-        print(f'     reg_RW0_addr <= RW0_addr;', file=f)
-        print(f'   end', file=f)
-        print(f'   if (RW0_en && RW0_wmode) begin', file=f)
-        print(f'     ram[RW0_addr] <= RW0_wdata;', file=f)
-        print(f'   end', file=f)
+        print(f'    if (RW0_en && !RW0_wmode) begin', file=f)
+        print(f'      reg_RW0_addr <= RW0_addr;', file=f)
+        print(f'    end', file=f)
+        print(f'    if (RW0_en && RW0_wmode) begin', file=f)
+        print(f'      ram[RW0_addr] <= RW0_wdata;', file=f)
+        print(f'    end', file=f)
         print(f'  end', file=f)
         print(f'  assign RW0_rdata_behav = ram[reg_RW0_addr];', file=f)
 
@@ -159,6 +159,10 @@ def generate_tb(config: Config) -> str:
         print(f'  reg W0_en;', file=f)
         print(f'  reg W0_clk;', file=f)
         print(f'  reg [{width-1}:0] W0_data;', file=f)
+        # behavior
+        print(f'  reg [{width-1}:0] ram [{depth-1}:0];', file=f)
+        print(f'  reg [{addr_width-1}:0] reg_R0_addr;', file=f)
+        print(f'  wire [{width-1}:0] R0_data_behav;', file=f)
 
         print(f'  initial begin', file=f)
         print(f'    R0_clk = 1;', file=f)
@@ -170,28 +174,45 @@ def generate_tb(config: Config) -> str:
         print(f'    W0_data = 0;', file=f)
         print(f'    #1;', file=f)
         for tx in trans:
-            print(f'    #10;', file=f)
             if tx[0] == "w":
+                print(f'    R0_en = 0;', file=f)
                 print(f'    W0_en = 1;', file=f)
                 print(f'    W0_addr = {tx[1]};', file=f)
                 print(f'    W0_data = \'h{tx[2]:x};', file=f)
                 print(f'    #10;', file=f)
-                print(f'    W0_en = 0;', file=f)
             elif tx[0] == "r":
                 print(f'    R0_en = 1;', file=f)
+                print(f'    W0_en = 0;', file=f)
                 print(f'    R0_addr = {tx[1]};', file=f)
                 print(f'    #10;', file=f)
-                print(f'    R0_en = 0;', file=f)
-                print(f'    if (R0_data != \'h{tx[2]:x}) begin', file=f)
+                print(
+                    f'    if (R0_data != \'h{tx[2]:x} || R0_data != R0_data_behav) begin', file=f)
                 print(f'      $display("ASSERTION FAILED");', file=f)
                 print(f'      $finish;', file=f)
                 print(f'    end', file=f)
+            else:
+                print(f'    R0_en = 0;', file=f)
+                print(f'    W0_en = 0;', file=f)
+                print(f'    #10;', file=f)
 
         print(f'    $finish;', file=f)
         print(f'  end', file=f)
 
         print(f'  always #5 R0_clk = ~R0_clk;', file=f)
         print(f'  always #5 W0_clk = ~W0_clk;', file=f)
+
+        # behavior, write first
+        print(f'  always @ (posedge R0_clk) begin', file=f)
+        print(f'    if (R0_en) begin', file=f)
+        print(f'      reg_R0_addr <= R0_addr;', file=f)
+        print(f'    end', file=f)
+        print(f'  end', file=f)
+        print(f'  always @ (posedge W0_clk) begin', file=f)
+        print(f'    if (W0_en) begin', file=f)
+        print(f'      ram[W0_addr] <= W0_data;', file=f)
+        print(f'    end', file=f)
+        print(f'  end', file=f)
+        print(f'  assign R0_data_behav = ram[reg_R0_addr];', file=f)
 
         print(f'  {config.name} inst (', file=f)
         print(f'    .R0_addr(R0_addr),', file=f)
