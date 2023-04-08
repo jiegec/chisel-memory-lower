@@ -24,7 +24,7 @@ ip:
   depth: 32
   type: 1r1w
   constants:
-    COLLD1SN: 1
+    COLLDISN: 1
     DFTRAMBYP: 0
     EMAA: 3
     EMAB: 3
@@ -41,7 +41,6 @@ ip:
     TDB: 0
     TENA: 1
     TENB: 1
-    TWENB: 0
   ports: &1r1w
     - type: r
       addr: AA

@@ -1,5 +1,6 @@
 import math
-from chisel_memory_lower.utils import generate_header
+import os
+from chisel_memory_lower.utils import generate_header, generate_tb
 from chisel_memory_lower.parser import Config
 from collections import namedtuple
 import yaml
@@ -8,26 +9,26 @@ import yaml
 def generate(config: Config, arm_config: str, tb: bool):
     cfg = yaml.load(open(arm_config, 'r'), Loader=yaml.Loader)
     ip = cfg['ip']
-    with open(f'{config.name}_arm.v', 'w') as f:
-        ports = set(config.ports.split(','))
-        depth = int(config.depth)
-        width = int(config.width)
-        addr_width = (depth-1).bit_length()
-        header = generate_header(config, 'arm')
-        print(header, file=f)
+    ports = set(config.ports.split(','))
+    depth = int(config.depth)
+    width = int(config.width)
+    addr_width = (depth-1).bit_length()
 
-        types = ''
-        if ports == {"read", "write"}:
-            # 1R1W
-            types = ['1r1w', '1r1w_masked']
-        elif ports == {"rw"}:
-            # 1RW
-            types = ['1rw']
-        elif ports == {"read", "mwrite"}:
-            # 1R1W Masked
-            types = ['1r1w_masked']
-        candidates = list(filter(lambda c: c['type'] in types, ip))
-        if len(candidates) > 0:
+    types = ''
+    if ports == {"read", "write"}:
+        # 1R1W
+        types = ['1r1w', '1r1w_masked']
+    elif ports == {"rw"}:
+        # 1RW
+        types = ['1rw']
+    elif ports == {"read", "mwrite"}:
+        # 1R1W Masked
+        types = ['1r1w_masked']
+    candidates = list(filter(lambda c: c['type'] in types, ip))
+    if len(candidates) > 0:
+        with open(f'{config.name}_arm.v', 'w') as f:
+            header = generate_header(config, 'arm')
+            print(header, file=f)
             selected = min(candidates, key=lambda candidate: math.ceil(width / candidate['width']) *
                            math.ceil(depth / candidate['depth']) * candidate['cost'])
             print(f"Using sram ip {selected['name']}")
@@ -52,11 +53,11 @@ def generate(config: Config, arm_config: str, tb: bool):
                 print(f'  wire [{width-1}:0] read_data_{j};', file=f)
 
             if addr_width > selected_addr_width:
-                print(f'  assign R0_data = \\', file=f)
+                print(f'  assign R0_data = ', file=f, end='')
                 for j in range(depth_replicate):
                     print(
-                        f'    {"  " * j}((read_addr_index_reg == {j}) ? read_data_{j} : \\', file=f)
-                print(f'    0{")" * depth_replicate};', file=f)
+                        f'((read_addr_index_reg == {j}) ? read_data_{j} : ', file=f, end='')
+                print(f'0{")" * depth_replicate};', file=f)
             else:
                 print(f'  assign R0_data = read_data_0;', file=f)
 
@@ -94,5 +95,15 @@ def generate(config: Config, arm_config: str, tb: bool):
                         print(
                             f'    .{pins[k][0]}({pins[k][1]}){end}', file=f)
                     print(f'  );', file=f)
-        print(f'endmodule', file=f)
-        pass
+            print(f'endmodule', file=f)
+
+        with open(f'{config.name}_arm.sh', 'w') as file:
+            print(f'#!/bin/bash', file=file)
+            print(
+                f'vcs +vcs+dumpvars+dump.vcd -full64 {config.name}_arm.v {config.name}_arm_tb.v {selected["name"]}.v', file=file)
+            print(f'./simv', file=file)
+        os.chmod(f'{config.name}_arm.sh', 0o755)
+
+        with open(f'{config.name}_arm_tb.v', 'w') as f:
+            tb = generate_tb(config)
+            print(tb, file=f)

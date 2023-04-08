@@ -24,10 +24,7 @@ module mem_1r1w_masked_48x64 (
   wire read_addr_match_1 = (R0_addr >> 5) == 1;
   wire write_addr_match_1 = (W0_addr >> 5) == 1;
   wire [63:0] read_data_1;
-  assign R0_data = \
-    ((read_addr_index_reg == 0) ? read_data_0 : \
-      ((read_addr_index_reg == 1) ? read_data_1 : \
-    0));
+  assign R0_data = ((read_addr_index_reg == 0) ? read_data_0 : ((read_addr_index_reg == 1) ? read_data_1 : 0));
   rf2_32x128_wm1 inst_0_0 (
     .AA(R0_addr),
     .CENA(~(R0_en && read_addr_match_0)),

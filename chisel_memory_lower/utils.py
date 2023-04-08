@@ -114,8 +114,7 @@ def generate_tb(config: Config) -> str:
         print(f'    RW0_wmode = 0;', file=f)
         print(f'    RW0_addr = 0;', file=f)
         print(f'    RW0_wdata = 0;', file=f)
-        print(f'    #1;', file=f)
-        print(f'    #10;', file=f)
+        print(f'    #2;', file=f)
         for tx in trans:
             if tx[0] == "w":
                 print(f'    RW0_en = 1;', file=f)
@@ -169,7 +168,7 @@ def generate_tb(config: Config) -> str:
         print(f'    W0_en = 0;', file=f)
         print(f'    W0_addr = 0;', file=f)
         print(f'    W0_data = 0;', file=f)
-        print(f'    #1;', file=f)
+        print(f'    #2;', file=f)
         for tx in trans:
             if tx[0] == "w":
                 print(f'    R0_en = 0;', file=f)
