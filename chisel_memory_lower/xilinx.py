@@ -1,8 +1,8 @@
-from chisel_memory_lower.utils import generate_header
+from chisel_memory_lower.utils import generate_header, generate_tb
 from chisel_memory_lower.parser import Config
 
 
-def generate(config: Config):
+def generate(config: Config, tb: bool):
     with open(f'{config.name}_xilinx.v', 'w') as f:
         ports = set(config.ports.split(','))
         depth = int(config.depth)
@@ -75,4 +75,6 @@ def generate(config: Config):
             print(f'    .rstb(1\'b0)', file=f)
             print(f'  );', file=f)
         print(f'endmodule', file=f)
-        pass
+
+        tb = generate_tb(config)
+        print(tb, file=f)

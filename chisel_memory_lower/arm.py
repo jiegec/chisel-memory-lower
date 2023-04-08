@@ -5,7 +5,7 @@ from collections import namedtuple
 import yaml
 
 
-def generate(config: Config, arm_config: str):
+def generate(config: Config, arm_config: str, tb: bool):
     cfg = yaml.load(open(arm_config, 'r'), Loader=yaml.Loader)
     ip = cfg['ip']
     with open(f'{config.name}_arm.v', 'w') as f:

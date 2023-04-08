@@ -27,3 +27,7 @@ module mem_1rw (
     .wea(RW0_wmode)
   );
 endmodule
+module mem_1rw_tb (
+);
+endmodule
+

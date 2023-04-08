@@ -33,3 +33,7 @@ module mem_1r1w (
     .rstb(1'b0)
   );
 endmodule
+module mem_1r1w_tb (
+);
+endmodule
+

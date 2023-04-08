@@ -46,3 +46,11 @@ def generate_header(config: Config, target: str) -> str:
 
     print(f');', file=f)
     return f.getvalue()
+
+
+def generate_tb(config: Config) -> str:
+    f = StringIO()
+    print(f'module {config.name}_tb (', file=f)
+    print(f');', file=f)
+    print(f'endmodule', file=f)
+    return f.getvalue()
