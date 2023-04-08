@@ -25,6 +25,6 @@ module mem_1r1w_masked_32x64 (
     .AB(W0_addr),
     .CENB(~(W0_en && write_addr_match_0)),
     .CLKB(W0_clk),
-    .DB(W0_data[63:0]),
+    .DB(W0_data[63:0])
   );
 endmodule

@@ -23,6 +23,25 @@ ip:
   width: 19
   depth: 32
   type: 1r1w
+  constants:
+    COLLD1SN: 1
+    DFTRAMBYP: 0
+    EMAA: 3
+    EMAB: 3
+    EMASA: 0
+    RET1N: 1
+    SEA: 0
+    SEB: 0
+    SIA: 0
+    SIB: 0
+    TAA: 0
+    TAB: 0
+    TCENA: 0
+    TCENB: 0
+    TDB: 0
+    TENA: 1
+    TENB: 1
+    TWENB: 0
   ports: &1r1w
     - type: r
       addr: AA

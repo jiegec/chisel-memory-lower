@@ -35,7 +35,7 @@ module mem_1r1w_masked_48x64 (
     .AB(W0_addr),
     .CENB(~(W0_en && write_addr_match_0)),
     .CLKB(W0_clk),
-    .DB(W0_data[63:0]),
+    .DB(W0_data[63:0])
   );
   rf2_32x128_wm1 inst_0_1 (
     .AA(R0_addr),
@@ -45,6 +45,6 @@ module mem_1r1w_masked_48x64 (
     .AB(W0_addr),
     .CENB(~(W0_en && write_addr_match_1)),
     .CLKB(W0_clk),
-    .DB(W0_data[63:0]),
+    .DB(W0_data[63:0])
   );
 endmodule

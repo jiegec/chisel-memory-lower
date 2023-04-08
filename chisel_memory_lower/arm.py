@@ -65,21 +65,34 @@ def generate(config: Config, arm_config: str):
                 width_end = (i+1) * width // width_replicate
                 for j in range(depth_replicate):
                     print(f'  {selected["name"]} inst_{i}_{j} (', file=f)
+                    pins = []
                     for port in selected["ports"]:
                         if port["type"] == "r":
-                            print(f'    .{port["addr"]}(R0_addr),', file=f)
-                            print(
-                                f'    .{port["enable_n"]}(~(R0_en && read_addr_match_{j})),', file=f)
-                            print(f'    .{port["clock"]}(R0_clk),', file=f)
-                            print(
-                                f'    .{port["data"]}(read_data_{j}[{width_end-1}:{width_start}]),', file=f)
+                            pins.append((port["addr"], f"R0_addr"))
+                            pins.append(
+                                (port["enable_n"], f"~(R0_en && read_addr_match_{j})"))
+                            pins.append((port["clock"], f"R0_clk"))
+                            pins.append(
+                                (port["data"], f"read_data_{j}[{width_end-1}:{width_start}]"))
                         elif port["type"] == "w":
-                            print(f'    .{port["addr"]}(W0_addr),', file=f)
-                            print(
-                                f'    .{port["enable_n"]}(~(W0_en && write_addr_match_{j})),', file=f)
-                            print(f'    .{port["clock"]}(W0_clk),', file=f)
-                            print(
-                                f'    .{port["data"]}(W0_data[{width_end-1}:{width_start}]),', file=f)
+                            pins.append((port["addr"], f"W0_addr"))
+                            pins.append(
+                                (port["enable_n"], f"~(W0_en && write_addr_match_{j})"))
+                            pins.append((port["clock"], f"W0_clk"))
+                            pins.append(
+                                (port["data"], f"W0_data[{width_end-1}:{width_start}]"))
+                    if "constants" in selected:
+                        for name in selected["constants"]:
+                            value = selected["constants"][name]
+                            pins.append((name, value))
+
+                    for k in range(len(pins)):
+                        if k == len(pins)-1:
+                            end = ''
+                        else:
+                            end = ','
+                        print(
+                            f'    .{pins[k][0]}({pins[k][1]}){end}', file=f)
                     print(f'  );', file=f)
         print(f'endmodule', file=f)
         pass
