@@ -1,6 +1,7 @@
 // Generate by chisel-memory-lower
 // Target: arm
 // Config(name='mem_1r1w', depth='48', width='64', ports='write,read', mask_gran=None)
+`timescale 1ns/1ps
 module mem_1r1w (
   input [5:0] R0_addr,
   input R0_en,

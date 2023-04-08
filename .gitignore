@@ -1,2 +1,10 @@
 __pycache__
 venv/
+*.prj
+*.sh
+xsim.*
+xelab.*
+*.jou
+*.log
+*.wdb
+*.vcd

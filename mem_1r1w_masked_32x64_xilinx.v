@@ -1,6 +1,7 @@
 // Generate by chisel-memory-lower
 // Target: xilinx
 // Config(name='mem_1r1w_masked_32x64', depth='32', width='64', ports='mwrite,read', mask_gran='8')
+`timescale 1ns/1ps
 module mem_1r1w_masked_32x64 (
   input [4:0] R0_addr,
   input R0_en,
