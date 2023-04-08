@@ -5,6 +5,25 @@ ip:
   width: 128
   depth: 32
   type: 1r1w_masked
+  constants:
+    COLLDISN: 1
+    DFTRAMBYP: 0
+    EMAA: 3
+    EMAB: 3
+    EMASA: 0
+    RET1N: 1
+    SEA: 0
+    SEB: 0
+    SIA: 0
+    SIB: 0
+    TAA: 0
+    TAB: 0
+    TCENA: 0
+    TCENB: 0
+    TDB: 0
+    TENA: 1
+    TENB: 1
+    TWENB: 1
   ports: &1r1w_mask
     - type: r
       addr: AA
@@ -16,7 +35,7 @@ ip:
       clock: CLKB
       enable_n: CENB
       data: DB
-      mask: WENB
+      mask_n: WENB
 # https://github.com/vortexgpgpu/vortex/blob/master/hw/syn/synopsys/models/memory/cln28hpm/rf2_32x19_wm0/rf2_32x19_wm0.v
 - name: rf2_32x19_wm0
   cost: 2136 # cell area

@@ -82,6 +82,20 @@ def generate(config: Config, arm_config: str, tb: bool):
                             pins.append((port["clock"], f"W0_clk"))
                             pins.append(
                                 (port["data"], f"W0_data[{width_end-1}:{width_start}]"))
+                            if "mask_n" in port:
+                                if ports == {"read", "mwrite"}:
+                                    # 1R1W Masked
+                                    bits = []
+                                    for bit in range(width_start, width_end):
+                                        mask_bit = bit // int(config.mask_gran)
+                                        bits.append(f'W0_mask[{mask_bit}]')
+                                    rhs = ', '.join(reversed(bits))
+                                    pins.append(
+                                        (port["mask_n"], f'~({{{rhs}}})'))
+                                else:
+                                    # all mask enabled
+                                    pins.append(
+                                        (port["mask_n"], f'{{{selected["width"]}{{1\'b0}}}}'))
                     if "constants" in selected:
                         for name in selected["constants"]:
                             value = selected["constants"][name]
