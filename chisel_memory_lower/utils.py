@@ -65,17 +65,24 @@ def generate_tb(config: Config) -> str:
     for i in range(depth):
         ram[i] = random.randint(0, (1 << width) - 1)
         trans.append(("w", i, ram[i]))
-    for i in range(100):
+    for i in range(1000):
         addr = random.randint(0, depth-1)
         data = random.randint(0, (1 << width) - 1)
         rand = random.randint(0, 9)
-        if rand <= 5:
+        if rand <= 3:
             # read
             trans.append(("r", addr, ram[addr]))
         elif rand < 9:
-            # write
-            ram[addr] = data
-            trans.append(("w", addr, data))
+            if ports == {"read", "write"} and rand < 6:
+                # read+write
+                # write first
+                ram[addr] = data
+                raddr = random.randint(0, depth-1)
+                trans.append(("rw", addr, data, raddr, ram[raddr]))
+            else:
+                # write
+                ram[addr] = data
+                trans.append(("w", addr, data))
         else:
             # bubble
             trans.append(("b"))
@@ -187,6 +194,18 @@ def generate_tb(config: Config) -> str:
                 print(f'    #10;', file=f)
                 print(
                     f'    if (R0_data != \'h{tx[2]:x} || R0_data != R0_data_behav) begin', file=f)
+                print(f'      $display("ASSERTION FAILED");', file=f)
+                print(f'      $finish;', file=f)
+                print(f'    end', file=f)
+            elif tx[0] == "rw":
+                print(f'    R0_en = 1;', file=f)
+                print(f'    R0_addr = {tx[3]};', file=f)
+                print(f'    W0_en = 1;', file=f)
+                print(f'    W0_addr = {tx[1]};', file=f)
+                print(f'    W0_data = \'h{tx[2]:x};', file=f)
+                print(f'    #10;', file=f)
+                print(
+                    f'    if (R0_data != \'h{tx[4]:x} || R0_data != R0_data_behav) begin', file=f)
                 print(f'      $display("ASSERTION FAILED");', file=f)
                 print(f'      $finish;', file=f)
                 print(f'    end', file=f)
