@@ -18,12 +18,15 @@ def generate(config: Config, arm_config: str, tb: bool):
     if ports == {"read", "write"}:
         # 1R1W
         types = ['1r1w', '1r1w_masked']
-    elif ports == {"rw"}:
-        # 1RW
-        types = ['1rw']
     elif ports == {"read", "mwrite"}:
         # 1R1W Masked
         types = ['1r1w_masked']
+    elif ports == {"rw"}:
+        # 1RW
+        types = ['1rw']
+    elif ports == {"mrw"}:
+        # 1RW Masked
+        types = ['1rw_masked']
     candidates = list(filter(lambda c: c['type'] in types, ip))
     if len(candidates) > 0:
         with open(f'{config.name}_arm.v', 'w') as f:
@@ -38,7 +41,7 @@ def generate(config: Config, arm_config: str, tb: bool):
             selected_addr_width = (selected['depth']-1).bit_length()
 
             if addr_width > selected_addr_width:
-                if ports == {"rw"}:
+                if ports == {"rw"} or ports == {"mrw"}:
                     print(
                         f'  reg [{addr_width-selected_addr_width-1}:0] rw_addr_index_reg;', file=f)
                     print(f'  always @ (posedge RW0_clk) begin', file=f)
@@ -54,7 +57,7 @@ def generate(config: Config, arm_config: str, tb: bool):
                     print(f'  end', file=f)
 
             for j in range(depth_replicate):
-                if ports == {"rw"}:
+                if ports == {"rw"} or ports == {"mrw"}:
                     print(
                         f'  wire rw_addr_match_{j} = (RW0_addr >> {selected_addr_width}) == {j};', file=f)
                     print(f'  wire [{width-1}:0] read_data_{j};', file=f)
@@ -66,7 +69,7 @@ def generate(config: Config, arm_config: str, tb: bool):
                     print(f'  wire [{width-1}:0] read_data_{j};', file=f)
 
             if addr_width > selected_addr_width:
-                if ports == {"rw"}:
+                if ports == {"rw"} or ports == {"mrw"}:
                     print(f'  assign RW0_rdata = ', file=f, end='')
                     for j in range(depth_replicate):
                         print(
@@ -79,7 +82,7 @@ def generate(config: Config, arm_config: str, tb: bool):
                             f'((read_addr_index_reg == {j}) ? read_data_{j} : ', file=f, end='')
                     print(f'0{")" * depth_replicate};', file=f)
             else:
-                if ports == {"rw"}:
+                if ports == {"rw"} or ports == {"mrw"}:
                     print(f'  assign RW0_rdata = read_data_0;', file=f)
                 else:
                     print(f'  assign R0_data = read_data_0;', file=f)
@@ -119,7 +122,7 @@ def generate(config: Config, arm_config: str, tb: bool):
                                     # all mask enabled
                                     pins.append(
                                         (port["mask_n"], f'{{{selected["width"]}{{1\'b0}}}}'))
-                        elif port["type"] == "rw":
+                        elif port["type"] == "rw" or port["type"] == "mrw":
                             pins.append((port["addr"], f"RW0_addr"))
                             pins.append(
                                 (port["enable_n"], f"~(RW0_en && rw_addr_match_{j})"))
@@ -129,6 +132,16 @@ def generate(config: Config, arm_config: str, tb: bool):
                                 (port["wdata"], f"RW0_wdata[{width_end-1}:{width_start}]"))
                             pins.append(
                                 (port["rdata"], f"read_data_{j}[{width_end-1}:{width_start}]"))
+
+                            if ports == {"mrw"}:
+                                # 1RW Masked
+                                bits = []
+                                for bit in range(width_start, width_end):
+                                    mask_bit = bit // int(config.mask_gran)
+                                    bits.append(f'RW0_wmask[{mask_bit}]')
+                                rhs = ', '.join(reversed(bits))
+                                pins.append(
+                                    (port["mask_n"], f'~({{{rhs}}})'))
                     if "constants" in selected:
                         for name in selected["constants"]:
                             value = selected["constants"][name]

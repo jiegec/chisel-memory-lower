@@ -24,6 +24,16 @@ def generate_header(config: Config, target: str) -> str:
         print(f'  input RW0_wmode,', file=f)
         print(f'  input [{width-1}:0] RW0_wdata,', file=f)
         print(f'  output [{width-1}:0] RW0_rdata', file=f)
+    elif ports == {"mrw"}:
+        # 1RW Masked
+        mask_gran = int(config.mask_gran)
+        print(f'  input [{addr_width-1}:0] RW0_addr,', file=f)
+        print(f'  input RW0_en,', file=f)
+        print(f'  input RW0_clk,', file=f)
+        print(f'  input RW0_wmode,', file=f)
+        print(f'  input [{width-1}:0] RW0_wdata,', file=f)
+        print(f'  input [{width//mask_gran-1}:0] RW0_wmask,', file=f)
+        print(f'  output [{width-1}:0] RW0_rdata', file=f)
     elif ports == {"read", "write"}:
         # 1RW
         print(f'  input [{addr_width-1}:0] R0_addr,', file=f)
@@ -60,18 +70,20 @@ def generate_tb(config: Config) -> str:
     addr_width = (depth-1).bit_length()
 
     # generate transactions
+    # r, w or rw for each cycle
     random.seed(0)
     trans = []
     ram = [0] * depth
     for i in range(depth):
         ram[i] = random.randint(0, (1 << width) - 1)
-        if "mwrite" in ports:
+        if "mwrite" in ports or "mrw" in ports:
             mask_gran = int(mask_gran)
             mask_bits = width // mask_gran
             wmask = (1 << mask_bits) - 1
             trans.append(("w", i, ram[i], wmask))
         else:
             trans.append(("w", i, ram[i]))
+
     for i in range(1000):
         addr = random.randint(0, depth-1)
         data = random.randint(0, (1 << width) - 1)
@@ -97,7 +109,7 @@ def generate_tb(config: Config) -> str:
                     trans.append(("rw", addr, data, raddr, ram[raddr]))
             else:
                 # write
-                if "mwrite" in ports:
+                if "mwrite" in ports or "mrw" in ports:
                     # masked write
                     mask_gran = int(mask_gran)
                     mask_bits = width // mask_gran
@@ -118,14 +130,16 @@ def generate_tb(config: Config) -> str:
     print(f'`timescale 1ns/1ps', file=f)
     print(f'module {config.name}_tb (', file=f)
     print(f');', file=f)
-    if ports == {"rw"}:
-        # 1RW
+    if ports == {"rw"} or ports == {"mrw"}:
+        # 1RW or 1RW Masked
         print(f'  reg [{addr_width-1}:0] RW0_addr;', file=f)
         print(f'  reg RW0_en;', file=f)
         print(f'  reg RW0_clk;', file=f)
         print(f'  reg RW0_wmode;', file=f)
         print(f'  reg [{width-1}:0] RW0_wdata;', file=f)
         print(f'  wire [{width-1}:0] RW0_rdata;', file=f)
+        if "mrw" in ports:
+            print(f'  reg [{width//int(mask_gran)-1}:0] RW0_wmask;', file=f)
 
         print(f'  initial begin', file=f)
         print(f'    RW0_clk = 1;', file=f)
@@ -133,6 +147,9 @@ def generate_tb(config: Config) -> str:
         print(f'    RW0_wmode = 0;', file=f)
         print(f'    RW0_addr = 0;', file=f)
         print(f'    RW0_wdata = 0;', file=f)
+        if "mrw" in ports:
+            print(
+                f'    RW0_wmask = {{{width//int(mask_gran)}{{1\'b1}}}};', file=f)
         print(f'    #2;', file=f)
         for tx in trans:
             if tx[0] == "w":
@@ -140,6 +157,8 @@ def generate_tb(config: Config) -> str:
                 print(f'    RW0_wmode = 1;', file=f)
                 print(f'    RW0_addr = {tx[1]};', file=f)
                 print(f'    RW0_wdata = \'h{tx[2]:x};', file=f)
+                if "mrw" in ports:
+                    print(f'    RW0_wmask = \'h{tx[3]:x};', file=f)
                 print(f'    #10;', file=f)
             elif tx[0] == "r":
                 print(f'    RW0_en = 1;', file=f)
@@ -167,6 +186,8 @@ def generate_tb(config: Config) -> str:
         print(f'    .RW0_clk(RW0_clk),', file=f)
         print(f'    .RW0_wmode(RW0_wmode),', file=f)
         print(f'    .RW0_wdata(RW0_wdata),', file=f)
+        if "mrw" in ports:
+            print(f'    .RW0_wmask(RW0_wmask),', file=f)
         print(f'    .RW0_rdata(RW0_rdata)', file=f)
         print(f'  );', file=f)
     elif ports == {"read", "write"} or ports == {"read", "mwrite"}:
