@@ -23,7 +23,7 @@ def generate(config: Config, arm_config: str, tb: bool):
         types = ['1r1w_masked']
     elif ports == {"rw"}:
         # 1RW
-        types = ['1rw']
+        types = ['1rw', '1rw_masked']
     elif ports == {"mrw"}:
         # 1RW Masked
         types = ['1rw_masked']
@@ -122,7 +122,7 @@ def generate(config: Config, arm_config: str, tb: bool):
                                     # all mask enabled
                                     pins.append(
                                         (port["mask_n"], f'{{{selected["width"]}{{1\'b0}}}}'))
-                        elif port["type"] == "rw" or port["type"] == "mrw":
+                        elif port["type"] == "rw":
                             pins.append((port["addr"], f"RW0_addr"))
                             pins.append(
                                 (port["enable_n"], f"~(RW0_en && rw_addr_match_{j})"))
@@ -133,15 +133,20 @@ def generate(config: Config, arm_config: str, tb: bool):
                             pins.append(
                                 (port["rdata"], f"read_data_{j}[{width_end-1}:{width_start}]"))
 
-                            if ports == {"mrw"}:
-                                # 1RW Masked
-                                bits = []
-                                for bit in range(width_start, width_end):
-                                    mask_bit = bit // int(config.mask_gran)
-                                    bits.append(f'RW0_wmask[{mask_bit}]')
-                                rhs = ', '.join(reversed(bits))
-                                pins.append(
-                                    (port["mask_n"], f'~({{{rhs}}})'))
+                            if "mask_n" in port:
+                                if ports == {"mrw"}:
+                                    # 1RW Masked
+                                    bits = []
+                                    for bit in range(width_start, width_end):
+                                        mask_bit = bit // int(config.mask_gran)
+                                        bits.append(f'RW0_wmask[{mask_bit}]')
+                                    rhs = ', '.join(reversed(bits))
+                                    pins.append(
+                                        (port["mask_n"], f'~({{{rhs}}})'))
+                                else:
+                                    # all mask enabled
+                                    pins.append(
+                                        (port["mask_n"], f'{{{selected["width"]}{{1\'b0}}}}'))
                     if "constants" in selected:
                         for name in selected["constants"]:
                             value = selected["constants"][name]
