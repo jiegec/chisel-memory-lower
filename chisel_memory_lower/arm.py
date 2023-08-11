@@ -46,20 +46,25 @@ def generate(config: Config, arm_config: str, tb: bool):
                 print(f'  end', file=f)
 
             for j in range(depth_replicate):
-                print(
-                    f'  wire read_addr_match_{j} = (R0_addr >> {selected_addr_width}) == {j};', file=f)
-                print(
-                    f'  wire write_addr_match_{j} = (W0_addr >> {selected_addr_width}) == {j};', file=f)
-                print(f'  wire [{width-1}:0] read_data_{j};', file=f)
-
-            if addr_width > selected_addr_width:
-                print(f'  assign R0_data = ', file=f, end='')
-                for j in range(depth_replicate):
+                if ports == {"rw"}:
                     print(
-                        f'((read_addr_index_reg == {j}) ? read_data_{j} : ', file=f, end='')
-                print(f'0{")" * depth_replicate};', file=f)
-            else:
-                print(f'  assign R0_data = read_data_0;', file=f)
+                        f'  wire rw_addr_match_{j} = (RW0_addr >> {selected_addr_width}) == {j};', file=f)
+                else:
+                    print(
+                        f'  wire read_addr_match_{j} = (R0_addr >> {selected_addr_width}) == {j};', file=f)
+                    print(
+                        f'  wire write_addr_match_{j} = (W0_addr >> {selected_addr_width}) == {j};', file=f)
+                    print(f'  wire [{width-1}:0] read_data_{j};', file=f)
+
+            if ports != {"rw"}:
+                if addr_width > selected_addr_width:
+                    print(f'  assign R0_data = ', file=f, end='')
+                    for j in range(depth_replicate):
+                        print(
+                            f'((read_addr_index_reg == {j}) ? read_data_{j} : ', file=f, end='')
+                    print(f'0{")" * depth_replicate};', file=f)
+                else:
+                    print(f'  assign R0_data = read_data_0;', file=f)
 
             for i in range(width_replicate):
                 width_start = i * width // width_replicate
@@ -96,6 +101,16 @@ def generate(config: Config, arm_config: str, tb: bool):
                                     # all mask enabled
                                     pins.append(
                                         (port["mask_n"], f'{{{selected["width"]}{{1\'b0}}}}'))
+                        elif port["type"] == "rw":
+                            pins.append((port["addr"], f"RW0_addr"))
+                            pins.append(
+                                (port["enable_n"], f"~(RW0_en && rw_addr_match_{j})"))
+                            pins.append((port["write_n"], f"~RW0_wmode"))
+                            pins.append((port["clock"], f"RW0_clk"))
+                            pins.append(
+                                (port["wdata"], f"RW0_wdata[{width_end-1}:{width_start}]"))
+                            pins.append(
+                                (port["rdata"], f"RW0_rdata[{width_end-1}:{width_start}]"))
                     if "constants" in selected:
                         for name in selected["constants"]:
                             value = selected["constants"][name]
