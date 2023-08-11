@@ -38,17 +38,26 @@ def generate(config: Config, arm_config: str, tb: bool):
             selected_addr_width = (selected['depth']-1).bit_length()
 
             if addr_width > selected_addr_width:
-                print(
-                    f'  reg [{addr_width-selected_addr_width-1}:0] read_addr_index_reg;', file=f)
-                print(f'  always @ (posedge R0_clk) begin', file=f)
-                print(
-                    f'    read_addr_index_reg <= R0_addr >> {selected_addr_width};', file=f)
-                print(f'  end', file=f)
+                if ports == {"rw"}:
+                    print(
+                        f'  reg [{addr_width-selected_addr_width-1}:0] rw_addr_index_reg;', file=f)
+                    print(f'  always @ (posedge RW0_clk) begin', file=f)
+                    print(
+                        f'    rw_addr_index_reg <= RW0_addr >> {selected_addr_width};', file=f)
+                    print(f'  end', file=f)
+                else:
+                    print(
+                        f'  reg [{addr_width-selected_addr_width-1}:0] read_addr_index_reg;', file=f)
+                    print(f'  always @ (posedge R0_clk) begin', file=f)
+                    print(
+                        f'    read_addr_index_reg <= R0_addr >> {selected_addr_width};', file=f)
+                    print(f'  end', file=f)
 
             for j in range(depth_replicate):
                 if ports == {"rw"}:
                     print(
                         f'  wire rw_addr_match_{j} = (RW0_addr >> {selected_addr_width}) == {j};', file=f)
+                    print(f'  wire [{width-1}:0] read_data_{j};', file=f)
                 else:
                     print(
                         f'  wire read_addr_match_{j} = (R0_addr >> {selected_addr_width}) == {j};', file=f)
@@ -56,13 +65,22 @@ def generate(config: Config, arm_config: str, tb: bool):
                         f'  wire write_addr_match_{j} = (W0_addr >> {selected_addr_width}) == {j};', file=f)
                     print(f'  wire [{width-1}:0] read_data_{j};', file=f)
 
-            if ports != {"rw"}:
-                if addr_width > selected_addr_width:
+            if addr_width > selected_addr_width:
+                if ports == {"rw"}:
+                    print(f'  assign RW0_rdata = ', file=f, end='')
+                    for j in range(depth_replicate):
+                        print(
+                            f'((rw_addr_index_reg == {j}) ? read_data_{j} : ', file=f, end='')
+                    print(f'0{")" * depth_replicate};', file=f)
+                else:
                     print(f'  assign R0_data = ', file=f, end='')
                     for j in range(depth_replicate):
                         print(
                             f'((read_addr_index_reg == {j}) ? read_data_{j} : ', file=f, end='')
                     print(f'0{")" * depth_replicate};', file=f)
+            else:
+                if ports == {"rw"}:
+                    print(f'  assign RW0_rdata = read_data_0;', file=f)
                 else:
                     print(f'  assign R0_data = read_data_0;', file=f)
 
@@ -110,7 +128,7 @@ def generate(config: Config, arm_config: str, tb: bool):
                             pins.append(
                                 (port["wdata"], f"RW0_wdata[{width_end-1}:{width_start}]"))
                             pins.append(
-                                (port["rdata"], f"RW0_rdata[{width_end-1}:{width_start}]"))
+                                (port["rdata"], f"read_data_{j}[{width_end-1}:{width_start}]"))
                     if "constants" in selected:
                         for name in selected["constants"]:
                             value = selected["constants"][name]
