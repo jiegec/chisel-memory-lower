@@ -109,15 +109,31 @@ def generate(config: Config, arm_config: str, tb: bool):
                     print(f'  {selected["name"]} inst_{i}_{j} (', file=f)
                     pins = []
                     for port in selected["ports"]:
+                        sram_depth_bits = (
+                            selected['depth']-1).bit_length()
+                        actual_depth_bits = min(
+                            sram_depth_bits, (depth-1).bit_length())
                         if port["type"] == "r":
-                            pins.append((port["addr"], f"R0_addr"))
+                            # connect addr
+                            addr = f"R0_addr[{actual_depth_bits-1}:0]"
+                            if actual_depth_bits < sram_depth_bits:
+                                addr = f"{{{sram_depth_bits - actual_depth_bits}'b0, {addr}}}"
+                            pins.append(
+                                (port["addr"], addr))
+
                             pins.append(
                                 (port["enable_n"], f"~(R0_en && read_addr_match_{j})"))
                             pins.append((port["clock"], f"R0_clk"))
                             pins.append(
                                 (port["data"], f"read_partial_{i}_{j}"))
                         elif port["type"] == "w":
-                            pins.append((port["addr"], f"W0_addr"))
+                            # connect addr
+                            addr = f"W0_addr[{actual_depth_bits-1}:0]"
+                            if actual_depth_bits < sram_depth_bits:
+                                addr = f"{{{sram_depth_bits - actual_depth_bits}'b0, {addr}}}"
+                            pins.append(
+                                (port["addr"], addr))
+
                             pins.append(
                                 (port["enable_n"], f"~(W0_en && write_addr_match_{j})"))
                             pins.append((port["clock"], f"W0_clk"))
@@ -149,9 +165,17 @@ def generate(config: Config, arm_config: str, tb: bool):
                                     pins.append(
                                         (port["mask_n"], f'{{{selected["width"]}{{1\'b0}}}}'))
                         elif port["type"] == "rw":
-                            depth_bits = selected['depth'].bit_length() - 1
+                            # connect addr
+                            sram_depth_bits = (
+                                selected['depth']-1).bit_length()
+                            actual_depth_bits = min(
+                                sram_depth_bits, (depth-1).bit_length())
+                            addr = f"RW0_addr[{actual_depth_bits-1}:0]"
+                            if actual_depth_bits < sram_depth_bits:
+                                addr = f"{{{sram_depth_bits - actual_depth_bits}'b0, {addr}}}"
                             pins.append(
-                                (port["addr"], f"RW0_addr[{depth_bits-1}:0]"))
+                                (port["addr"], addr))
+
                             pins.append(
                                 (port["enable_n"], f"~(RW0_en && rw_addr_match_{j})"))
                             pins.append((port["write_n"], f"~RW0_wmode"))
