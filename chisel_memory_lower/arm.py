@@ -74,6 +74,13 @@ def generate(config: Config, arm_config: str, tb: bool):
                     print(
                         f'  wire write_addr_match_{j} = (W0_addr >> {selected_addr_width}) == {j};', file=f)
                     print(f'  wire [{width-1}:0] read_data_{j};', file=f)
+                    for i in range(width_replicate):
+                        width_start = i * width // width_replicate
+                        width_end = (i+1) * width // width_replicate
+                        print(
+                            f'  wire [{selected["width"]-1}:0] read_partial_{i}_{j};', file=f)
+                        print(
+                            f'  assign read_data_{j}[{width_end-1}:{width_start}] = read_partial_{i}_{j};', file=f)
 
             if addr_width > selected_addr_width:
                 if ports == {"rw"} or ports == {"mrw"}:
@@ -108,14 +115,20 @@ def generate(config: Config, arm_config: str, tb: bool):
                                 (port["enable_n"], f"~(R0_en && read_addr_match_{j})"))
                             pins.append((port["clock"], f"R0_clk"))
                             pins.append(
-                                (port["data"], f"read_data_{j}[{width_end-1}:{width_start}]"))
+                                (port["data"], f"read_partial_{i}_{j}"))
                         elif port["type"] == "w":
                             pins.append((port["addr"], f"W0_addr"))
                             pins.append(
                                 (port["enable_n"], f"~(W0_en && write_addr_match_{j})"))
                             pins.append((port["clock"], f"W0_clk"))
+
+                            # pad to full width
+                            data = f'W0_data[{width_end-1}:{width_start}]'
+                            if data_width < selected['width']:
+                                data = f"{{{selected['width'] - data_width}'b0, {data}}}"
                             pins.append(
-                                (port["data"], f"W0_data[{width_end-1}:{width_start}]"))
+                                (port["data"], data))
+
                             if "mask_n" in port:
                                 if ports == {"read", "mwrite"}:
                                     # 1R1W Masked
@@ -123,6 +136,11 @@ def generate(config: Config, arm_config: str, tb: bool):
                                     for bit in range(width_start, width_end):
                                         mask_bit = bit // int(config.mask_gran)
                                         bits.append(f'W0_mask[{mask_bit}]')
+
+                                    # pad to full width
+                                    bits += ["1'b0"] * \
+                                        (selected['width'] - data_width)
+
                                     rhs = ', '.join(reversed(bits))
                                     pins.append(
                                         (port["mask_n"], f'~({{{rhs}}})'))
@@ -154,9 +172,11 @@ def generate(config: Config, arm_config: str, tb: bool):
                                     for bit in range(width_start, width_end):
                                         mask_bit = bit // int(config.mask_gran)
                                         bits.append(f'RW0_wmask[{mask_bit}]')
+
                                     # pad to full width
                                     bits += ["1'b0"] * \
                                         (selected['width'] - data_width)
+
                                     rhs = ', '.join(reversed(bits))
                                     pins.append(
                                         (port["mask_n"], f'~({{{rhs}}})'))
