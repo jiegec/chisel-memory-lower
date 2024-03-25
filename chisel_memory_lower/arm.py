@@ -136,7 +136,10 @@ def generate(config: Config, arm_config: str, tb: bool):
 
                             pins.append(
                                 (port["enable_n"], f"~(W0_en && write_addr_match_{j})"))
-                            pins.append((port["clock"], f"W0_clk"))
+                            if "clock" in port:
+                                pins.append((port["clock"], f"W0_clk"))
+                            else:
+                                print("CAUTION! clock is missing in write port, please ensure R0_clk and W0_clk connect to the same signal.")
 
                             # pad to full width
                             data = f'W0_data[{width_end-1}:{width_start}]'
